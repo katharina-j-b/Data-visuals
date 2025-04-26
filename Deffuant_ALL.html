@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>The walls we build in our minds - Deffuant Opinion Model</title>
+    
+    <style>
+        /* Typography & Layout */
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f2f1ed;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: left;
+            max-width: 700px;
+            margin: 60px auto 20px;
+            padding: 0 20px;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.2;
+            color: #111;
+        }
+
+        .header .teaser {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding: 0 20px 40px;
+        }
+
+        .top-controls, .sliders {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            font-size: 14px;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            margin-bottom: 3px;
+            color: #444;
+        }
+
+        input[type="number"],
+        input[type="range"] {
+            width: 180px;
+            padding: 6px 10px;
+            font-size: 14px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            background-color: #fff;
+            transition: border-color 0.2s ease-in-out;
+        }
+
+        input[type="number"]:focus,
+        input[type="range"]:focus {
+            border-color: #666;
+            outline: none;
+        }
+
+        .plot-section {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            padding-top: 20px;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fdfdfc;
+            width: 650px;
+            height: 320px;
+        }
+
+        .x-axis-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .label-with-line {
+            position: absolute;
+            font-weight: bold;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .label-dogs {
+            top: 15px;
+            left: 120px;
+        }
+
+        .label-cats {
+            bottom: 5px;
+            left: 120px;
+        }
+
+        .vertical-line {
+            position: absolute;
+            top: 312px;
+            left: 235px;
+            height: 230px;
+            width: 0;
+            border-left: 1px solid #888;
+            opacity: 0.7;
+        }
+
+        .vertical-line::before,
+        .vertical-line::after {
+            content: '';
+            position: absolute;
+            left: -5px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+        }
+
+        .vertical-line::before {
+            top: -8px;
+            border-bottom: 7px solid #888;
+        }
+
+        .vertical-line::after {
+            bottom: -8px;
+            border-top: 7px solid #888;
+        }
+
+        p {
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            color: #333;
+            text-align: left;
+            margin: 20px auto;
+            line-height: 1.6;
+            max-width: 700px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            background: #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            background: #bbb;
+            border-radius: 4px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #444;
+            cursor: pointer;
+            margin-top: -5px;
+            transition: background 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #222;
+        }
+
+        input[type="range"]::-moz-range-track {
+            background: #bbb;
+            height: 6px;
+            border-radius: 4px;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #444;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>The walls we build in our minds</h1>
+        <div class="teaser">Simulating political division on Trump's immigration policy via the Deffuant opinion model.</div>
+    </div>
+
+    <div class="container">
+        <div class="top-controls">
+            <div class="input-group">
+                <label for="numAgents">Group size:</label>
+                <input type="number" id="numAgents" value="100" min="10" max="1000" />
+            </div>
+            <div class="input-group">
+                <label for="iterations">Time (in rounds):</label>
+                <input type="number" id="iterations" value="5000" min="100" max="10000" />
+            </div>
+        </div>
+
+        <div class="vertical-line"></div>
+
+        <div class="plot-section">
+            <div class="canvas-container">
+                <canvas id="opinionCanvas" width="600" height="300"></canvas>
+                <div class="x-axis-label">Time (in rounds)</div>
+
+                <div class="label-with-line label-dogs">
+                    <span>Full support <br> of Open-Borders</span>
+                </div>
+
+                <div class="label-with-line label-cats">
+                    <span>Zero-Tolerance <br> for Immigration</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sliders">
+            <div class="input-group">
+                <label for="confidenceThreshold">Willingness to engage: <span id="confidenceValue">0.2</span></label>
+                <input type="range" id="confidenceThreshold" min="0" max="1" step="0.01" value="0.2" />
+            </div>
+
+            <div class="input-group">
+                <label for="convergenceFactor">Flexibility to change opinion: <span id="convergenceValue">0.5</span></label>
+                <input type="range" id="convergenceFactor" min="0" max="1" step="0.01" value="0.5" />
+            </div>
+        </div>
+    </div>
+
+    <p>Donald Trump’s anti-immigration policies have recently sparked controversy, particularly following the deportation of a two-year-old U.S. citizen and his Honduran mother without due process. Opinions on Trump’s approach, however, remain deeply divided. A <a href="https://www.umass.edu/news/article/new-national-umass-amherst-poll-finds-americans-two-minds-immigration" target="_blank">study by the University of Massachusetts</a> found that exactly half of Americans view his immigration policies positively.</p>
+
+    <p>According to the <a href="https://today.usc.edu/immigration-usc-experts-available-to-discuss-americas-most-polarizing-topic/" target="_blank">Polarization Index by the University of Southern California</a>, immigration is polarising opinions like no other topic. While immigration is a multifaceted issue, why is it that opinions are dividing so sharply here?</p>
+
+    <p>One approach to explaining this is offered by the Deffuant opinion model, a socio-political model, which describes how individuals' opinions can change over time through interactions with others. If opinions are labelled from 0 to 1—where 0 represents complete support for immigration and 1 represents complete opposition—the model shows that over time, only a few dominant opinions tend to survive.</p>
+
+    <p>The model introduces two key factors: confidence and convergence. Confidence defines the threshold for interaction—how similar someone’s opinion must be before you are willing to engage with them. A low confidence level means you only talk to people with very similar views. Convergence, on the other hand, determines how much you adjust your opinion when exposed to differing views.</p>
+
+    <p>Running the model through several rounds with a group of people whose opinions initially cover the full spectrum between 0 and 1 shows that opinions may polarise into two, sometimes three, or in rare cases even collapse into a single shared opinion if convergence is high enough.</p>
+
+    <p>Of course, the model is an idealisation of reality. In real life, when we engage with one another, many factors come into play—such as emotions, identity, and culture—not just confidence or convergence. But like in many other situations, the model still offers a valuable lesson: balance is key.</p>
+
+    <script>
+        window.onload = () => {
+            runSimulation();
+        };
+
+        let debounceTimer;
+        function debounceRunSimulation() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(runSimulation, 300);
+        }
+
+        document.getElementById("numAgents").addEventListener("input", debounceRunSimulation);
+        document.getElementById("iterations").addEventListener("input", debounceRunSimulation);
+        document.getElementById("confidenceThreshold").addEventListener("input", debounceRunSimulation);
+        document.getElementById("convergenceFactor").addEventListener("input", debounceRunSimulation);
+
+        function runSimulation() {
+            const numAgents = parseInt(document.getElementById("numAgents").value);
+            const iterations = parseInt(document.getElementById("iterations").value);
+            const confidenceThreshold = parseFloat(document.getElementById("confidenceThreshold").value);
+            const convergenceFactor = parseFloat(document.getElementById("convergenceFactor").value);
+
+            let opinions = Array.from({ length: numAgents }, () => Math.random());
+            let history = [];
+
+            for (let iter = 0; iter < iterations; iter++) {
+                const i = Math.floor(Math.random() * numAgents);
+                let j;
+                do {
+                    j = Math.floor(Math.random() * numAgents);
+                } while (j === i);
+
+                const diff = Math.abs(opinions[i] - opinions[j]);
+                if (diff < confidenceThreshold) {
+                    const delta = convergenceFactor * (opinions[j] - opinions[i]);
+                    opinions[i] += delta;
+                    opinions[j] -= delta;
+                }
+
+                if (iter % Math.floor(iterations / 100) === 0) {
+                    history.push([...opinions]);
+                }
+            }
+
+            drawSimulation(history);
+        }
+
+        function drawSimulation(history) {
+            const canvas = document.getElementById("opinionCanvas");
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.fillStyle = "#f4f1ec";
+            ctx.fillRect(0, 0, width, height);
+
+            const stepX = width / history.length;
+
+            history.forEach((state, t) => {
+                const x = t * stepX;
+                state.forEach(opinion => {
+                    const y = height - opinion * height;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = "#2a4c96";
+                    ctx.fill();
+                });
+            });
+
+            ctx.strokeStyle = "#ccc";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, width, height);
+        }
+
+        document.getElementById("confidenceThreshold").addEventListener("input", (e) => {
+            document.getElementById("confidenceValue").textContent = parseFloat(e.target.value).toFixed(2);
+        });
+
+        document.getElementById("convergenceFactor").addEventListener("input", (e) => {
+            document.getElementById("convergenceValue").textContent = parseFloat(e.target.value).toFixed(2);
+        });
+    </script>
+</body>
+</html>
